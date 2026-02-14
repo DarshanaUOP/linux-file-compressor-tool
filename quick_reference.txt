@@ -1,0 +1,99 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    FILE MANAGER TOOL - QUICK REFERENCE                       ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ INSTALLATION                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  chmod +x file_manager_tool.sh
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ COMMANDS                                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ┌─────────────┬─────────────┬──────────────────────────────────────────────┐
+  │ SHORT       │ LONG        │ SYNTAX                                       │
+  ├─────────────┼─────────────┼──────────────────────────────────────────────┤
+  │ c           │ compress    │ ./file_manager_tool.sh c <src> <dest>        │
+  │ d           │ decompress  │ ./file_manager_tool.sh d <src> <dest>        │
+  │ f           │ find-dup    │ ./file_manager_tool.sh f <src>               │
+  └─────────────┴─────────────┴──────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ EXAMPLES                                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  COMPRESS (backup documents)
+  ───────────────────────────
+  ./file_manager_tool.sh c ~/Documents ~/Backups
+  
+  DECOMPRESS (restore from backup)
+  ────────────────────────────────
+  ./file_manager_tool.sh d ~/Backups ~/Restored
+  
+  FIND DUPLICATES (clean up downloads)
+  ────────────────────────────────────
+  ./file_manager_tool.sh f ~/Downloads
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ OUTPUT FILES                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Compress creates (file-by-file):
+  • filename.gz (for each source file)
+  • filename.gz.meta (metadata for each file)
+  • compression_manifest_YYYYMMDD_HHMMSS.txt
+  
+  Find duplicates creates:
+  • duplicates_report_YYYYMMDD_HHMMSS.txt
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ NAMING CONVENTIONS (PEP 8 Style)                                            │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✓ Lowercase with underscores
+  ✓ file_manager_tool.sh
+  ✓ duplicates_report_*.txt
+  ✓ archive_*.tar.gz
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ FEATURES                                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ✓ File-by-file compression (each file compressed individually)
+  ✓ Preserves file permissions
+  ✓ Preserves timestamps
+  ✓ Preserves ownership
+  ✓ Preserves directory structure
+  ✓ MD5-based duplicate detection
+  ✓ Color-coded output
+  ✓ Compression statistics per file
+  ✓ Non-destructive operations
+  ✓ Automatic directory creation
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ REQUIREMENTS                                                                 │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  bash, tar, gzip, md5sum, find, du
+  (All pre-installed on most Linux/macOS systems)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ HELP                                                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  ./file_manager_tool.sh --help
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ SYSTEM-WIDE INSTALLATION (Optional)                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  sudo cp file_manager_tool.sh /usr/local/bin/fmtool
+  
+  Then use anywhere:
+  fmtool c ~/docs ~/backup
+  fmtool f ~/downloads
+  fmtool d ~/backup ~/restore
+
+═══════════════════════════════════════════════════════════════════════════════
