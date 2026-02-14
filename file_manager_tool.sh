@@ -50,8 +50,11 @@ compress_files() {
     local source="$1"
     local destination="$2"
     
+    # Convert to absolute paths to handle relative paths correctly
+    source=$(cd "$source" && pwd)
+    destination=$(mkdir -p "$destination" && cd "$destination" && pwd)
+    
     check_directory "$source"
-    create_directory "$destination"
     
     echo -e "${GREEN}Starting file-by-file compression...${NC}"
     echo "Source: $source"
@@ -76,14 +79,14 @@ compress_files() {
     while IFS= read -r -d '' filepath; do
         ((total_files++))
         
-        # Get relative path from source directory
+        # Get relative path from source directory (remove source prefix)
         local rel_path="${filepath#$source/}"
         
         # Create corresponding directory structure in destination
         local dest_dir="$destination/$(dirname "$rel_path")"
         mkdir -p "$dest_dir" > /dev/null 2>&1
         
-        # Compressed file path
+        # Compressed file path (maintain relative structure)
         local compressed_path="$destination/${rel_path}.gz"
         
         # Get file size before compression (cross-platform)
@@ -179,8 +182,11 @@ decompress_files() {
     local source="$1"
     local destination="$2"
     
+    # Convert to absolute paths
+    source=$(cd "$source" && pwd)
+    destination=$(mkdir -p "$destination" && cd "$destination" && pwd)
+    
     check_directory "$source"
-    create_directory "$destination"
     
     echo -e "${GREEN}Starting file-by-file decompression...${NC}"
     echo "Source: $source"
@@ -191,34 +197,31 @@ decompress_files() {
     local decompressed_files=0
     local failed_files=0
     
-    # Find all .gz files in source directory (excluding .meta files)
+    # Find all .gz files recursively in source directory (excluding .meta files)
     while IFS= read -r -d '' gz_file; do
         ((total_files++))
         
         # Get relative path from source directory
-        local rel_path="${gz_file#$source/}"
-        
-        # Remove .gz extension to get original filename
-        local original_name="${rel_path%.gz}"
-        
-        # Create corresponding directory structure in destination
-        local dest_dir="$destination/$(dirname "$original_name")"
-        mkdir -p "$dest_dir" > /dev/null 2>&1
-        
-        # Decompressed file path
-        local decompressed_path="$destination/$original_name"
+        local rel_gz_path="${gz_file#$source/}"
         
         # Check for metadata file
         local meta_file="${gz_file}.meta"
         
-        # Decompress the file
-        if gunzip -c "$gz_file" > "$decompressed_path" 2>/dev/null; then
-            # Restore metadata if available
-            if [ -f "$meta_file" ]; then
-                # Read metadata
-                local original_perms=$(grep "^permissions=" "$meta_file" | cut -d'=' -f2-)
-                local original_mtime=$(grep "^mtime=" "$meta_file" | cut -d'=' -f2-)
-                
+        if [ -f "$meta_file" ]; then
+            # Read original path from metadata
+            local original_path=$(grep "^original_path=" "$meta_file" | cut -d'=' -f2-)
+            local original_perms=$(grep "^permissions=" "$meta_file" | cut -d'=' -f2-)
+            local original_mtime=$(grep "^mtime=" "$meta_file" | cut -d'=' -f2-)
+            
+            # Create corresponding directory structure in destination
+            local dest_dir="$destination/$(dirname "$original_path")"
+            mkdir -p "$dest_dir" > /dev/null 2>&1
+            
+            # Decompressed file path (restore original structure)
+            local decompressed_path="$destination/$original_path"
+            
+            # Decompress the file
+            if gunzip -c "$gz_file" > "$decompressed_path" 2>/dev/null; then
                 # Restore permissions if available
                 if [ -n "$original_perms" ]; then
                     chmod "$original_perms" "$decompressed_path" 2>/dev/null
@@ -229,17 +232,35 @@ decompress_files() {
                     touch -t "$(date -d @$original_mtime +%Y%m%d%H%M.%S 2>/dev/null)" "$decompressed_path" 2>/dev/null || \
                     touch -r "$gz_file" "$decompressed_path" 2>/dev/null
                 fi
+                
+                ((decompressed_files++))
+                echo -e "${GREEN}✓${NC} $original_path"
             else
-                # No metadata file, copy permissions from compressed file
+                ((failed_files++))
+                echo -e "${RED}✗${NC} Failed to decompress: $rel_gz_path"
+            fi
+        else
+            # No metadata file - remove .gz extension and use relative path
+            local original_name="${rel_gz_path%.gz}"
+            
+            # Create corresponding directory structure in destination
+            local dest_dir="$destination/$(dirname "$original_name")"
+            mkdir -p "$dest_dir" > /dev/null 2>&1
+            
+            local decompressed_path="$destination/$original_name"
+            
+            # Decompress the file
+            if gunzip -c "$gz_file" > "$decompressed_path" 2>/dev/null; then
+                # Copy permissions from compressed file
                 chmod --reference="$gz_file" "$decompressed_path" 2>/dev/null || \
                     chmod 644 "$decompressed_path" 2>/dev/null
+                
+                ((decompressed_files++))
+                echo -e "${GREEN}✓${NC} $original_name"
+            else
+                ((failed_files++))
+                echo -e "${RED}✗${NC} Failed to decompress: $rel_gz_path"
             fi
-            
-            ((decompressed_files++))
-            echo -e "${GREEN}✓${NC} $original_name"
-        else
-            ((failed_files++))
-            echo -e "${RED}✗${NC} Failed to decompress: $rel_path"
         fi
     done < <(find "$source" -type f -name "*.gz" ! -name "*.meta" -print0)
     

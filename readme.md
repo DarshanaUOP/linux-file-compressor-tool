@@ -54,9 +54,10 @@ chmod +x file_manager_tool.sh
 
 ## Key Features
 ✓ **File-by-file compression** - Each file compressed individually
+✓ **Preserves directory structure** - Relative paths maintained in destination
 ✓ Short command aliases (c, d, f) for quick operations
+✓ Handles absolute and relative paths (including `../`)
 ✓ Preserves all file metadata (permissions, timestamps, ownership)
-✓ Maintains directory structure
 ✓ Simple 2-3 argument command structure
 ✓ Color-coded output for easy reading
 ✓ Compression statistics for each file
@@ -106,7 +107,9 @@ fmtool d ~/backup ~/restore
 
 ## Output Files
 
-- **Compression**: Creates individual `.gz` files for each source file, `.meta` files for metadata, and `compression_manifest_YYYYMMDD_HHMMSS.txt`
+- **Compression**: Creates `.gz` files preserving directory structure, `.meta` files for metadata, plus `compression_manifest_YYYYMMDD_HHMMSS.txt`
+  - Example: `source/sub/file.txt` becomes `dest/sub/file.txt.gz` and `dest/sub/file.txt.gz.meta`
+- **Decompression**: Directory structure preserved from compression
 - **Duplicates**: Creates `duplicates_report_YYYYMMDD_HHMMSS.txt` in source folder
 
 For detailed documentation, see `REQUIREMENTS.md`.

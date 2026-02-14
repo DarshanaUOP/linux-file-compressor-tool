@@ -13,7 +13,7 @@
     └── config.json
 ```
 
-### After Compression (Destination Directory)
+### After Compression (Destination Directory - Relative Structure Preserved)
 ```
 ~/backups/
 ├── report.pdf.gz
@@ -30,24 +30,32 @@
 └── compression_manifest_20260214_091500.txt
 ```
 
-## Key Benefits of File-by-File Compression
+**Key Point**: The directory structure **relative to the source** is preserved in the destination. If source is `a/b/source` with subdirectories `sub1/sub2`, the destination `h/k/dest` will have `h/k/dest/sub1/sub2`.
+
+## Key Benefits of File-by-File Compression with Relative Structure
 
 ### 1. **Individual File Access**
    - Extract only the files you need
    - No need to decompress entire archives
    - Faster access to specific files
 
-### 2. **Better for Version Control**
+### 2. **Preserves Directory Organization**
+   - Maintains familiar folder structure
+   - Easy to navigate compressed backups
+   - Files remain organized as in source
+
+### 3. **Better for Version Control**
    - Only recompress changed files
    - Easier to track what changed
    - More efficient incremental backups
 
-### 3. **Fault Tolerance**
+### 4. **Fault Tolerance**
    - One corrupted file doesn't affect others
    - Failed compression doesn't lose all data
    - Partial recovery possible
 
-### 4. **Flexible Usage**
+### 5. **Flexible Usage**
+   - Works with absolute and relative paths
    - Mix compressed and uncompressed files
    - Decompress selectively
    - Easy to automate
@@ -94,6 +102,9 @@ Compressed size: 775168 bytes (757.00 KiB)
 Overall compression: 74%
 ```
 
+The manifest shows:
+- Relative path | Original size | Compressed size | Compression ratio
+
 ## Usage Examples
 
 ### Compress Specific Folder
@@ -107,27 +118,47 @@ Overall compression: 74%
 ✓ notes.txt (50% saved)
 ✓ projects/code.py (50% saved)
 ✓ projects/config.json (50% saved)
+
+# Result: Directory structure preserved
+# ~/backups/report.pdf.gz
+# ~/backups/projects/code.py.gz
 ```
 
 ### Decompress Everything
 ```bash
-# Restore all files
+# Restore all files (structure preserved)
 ./file_manager_tool.sh d ~/backups ~/restored
 
 # Output:
 ✓ report.pdf
 ✓ data.csv
 ✓ notes.txt
-✓ projects/code.py
-✓ projects/config.json
+✓ projects/code.py       ← Directory structure maintained
+✓ projects/config.json   ← Directory structure maintained
 ```
 
-### Selective Decompression
+### Example with Absolute Paths
 ```bash
-# Decompress just one file manually
-gunzip ~/backups/report.pdf.gz
+# Source: /a/b/source with subdirs sub1/sub2
+# Compress to: /h/k/dest
 
-# The file will be restored to ~/backups/report.pdf
+./file_manager_tool.sh c /a/b/source /h/k/dest
+
+# Result:
+# /h/k/dest/file1.txt.gz
+# /h/k/dest/sub1/file2.txt.gz
+# /h/k/dest/sub1/sub2/file3.txt.gz
+```
+
+### Example with Relative Paths
+```bash
+# Works with ./ and ../ paths
+cd /home/user
+./file_manager_tool.sh c ./documents ../backups
+
+# Or from subdirectory
+cd /a/b
+./file_manager_tool.sh c ./source ../../h/k/dest
 ```
 
 ## Performance Characteristics
@@ -152,11 +183,13 @@ gunzip ~/backups/report.pdf.gz
 | Feature                  | File-by-File | Single Archive |
 |--------------------------|--------------|----------------|
 | Individual file access   | ✅ Instant   | ❌ Extract all |
+| Directory structure      | ✅ Preserved | ✅ Preserved   |
 | Incremental backup       | ✅ Easy      | ❌ Difficult   |
 | Fault tolerance          | ✅ High      | ⚠️ Low        |
 | Compression ratio        | ⚠️ Good     | ✅ Excellent   |
 | Number of files created  | ⚠️ Many     | ✅ One        |
 | Metadata preservation    | ✅ Detailed  | ✅ Limited     |
+| Relative/absolute paths  | ✅ Both      | ✅ Both        |
 
 ## Best Practices
 
